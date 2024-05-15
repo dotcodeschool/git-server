@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# Define colors for the output
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+set -eu -o pipefail
+
+# Function to display error message and exit
+error_exit() {
+    printf "${RED}$1${NC}\n" >&2
+    exit 1
+}
+
+# Function to check push options for force push
+check_push_options() {
+    local num_options="${GIT_PUSH_OPTION_COUNT:-0}"
+    for i in $(seq 0 $((num_options - 1)))
+    do
+        local option_name="GIT_PUSH_OPTION_${i}"
+        local option_value="${!option_name}"
+        if [[ "$option_value" == "force" ]]
+        then
+            error_exit "Force-pushing is not allowed."
+        fi
+    done
+}
+
+# Function to prevent creating new branches or tags
+prevent_branch_tag_creation() {
+    local oldrev="$1"
+    local refname="$2"
+    if [[ "$oldrev" == "0000000000000000000000000000000000000000" ]]; then
+        if [[ "$refname" == refs/tags/* || "$refname" == refs/heads/* ]]; then
+            error_exit "Creation of new branches or tags is not allowed. Attempted to create: $refname"
+        fi
+    fi
+}
+
+# Function to prevent deleting branches or tags
+prevent_branch_tag_deletion() {
+    local newrev="$1"
+    local refname="$2"
+    if [[ "$newrev" == "0000000000000000000000000000000000000000" ]]; then
+        if [[ "$refname" == refs/tags/* || "$refname" == refs/heads/* ]]; then
+            error_exit "Deletion of branches or tags is not allowed. Attempted to delete: $refname"
+        fi
+    fi
+}
+
+# Function to prevent force-pushing
+prevent_force_pushing() {
+    local oldrev="$1"
+    local newrev="$2"
+    local refname="$3"
+    if [[ "$oldrev" != "0000000000000000000000000000000000000000" ]] && [[ "$newrev" != "0000000000000000000000000000000000000000" ]]; then
+        if ! git merge-base --is-ancestor "$oldrev" "$newrev"; then
+            error_exit "Force-pushing is not allowed on branch: $refname. Attempted to push from $oldrev to $newrev."
+        fi
+    fi
+}
+
+# Check push options first
+check_push_options
+
+# Read from stdin to get the oldrev, newrev, and refname
+while read -r oldrev newrev refname
+do
+    prevent_branch_tag_creation "$oldrev" "$refname"
+    prevent_branch_tag_deletion "$newrev" "$refname"
+    prevent_force_pushing "$oldrev" "$newrev" "$refname"
+done
+
+# Allow the push if none of the above conditions were met
+exit 0

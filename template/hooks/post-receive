@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# Post-Receive Git Hook Script
+# ----------------------------
+# This post-receive hook script is designed to run on the server after a successful git push.
+# It performs the following actions:
+#
+# 1. Displays an ASCII art of the logo for Dot Code School as the welcome banner.
+# 2. Prints a custom welcome message to notify the user of a successful commit reception.
+# 3. Retrieves the current working directory of the repository where the hook is executed.
+# 4. Extracts the username and repository name from the directory path.
+# 5. Constructs and displays the full URL of the repository based on extracted details.
+#
+# The script uses ANSI escape codes to colorize output:
+# - GREEN for success messages.
+# - BLUE, and ORANGE if needed for additional messages or alerts (currently not used in this script).
+# - NC (No Color) resets the text color to default terminal color to avoid bleed-over of colors in terminal output.
+#
+# Usage: 
+# This script should be placed in the 'hooks/post-receive' directory of a Git repository and made executable.
+# It helps in providing immediate visual feedback to users who push to the repository, and constructs a URL that can be used for further automated tasks or logging.
+#
+# Note:
+# Ensure the base URL ("https://gitserver.com/") is correctly configured to match your server's URL structure.
+
+
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+ORANGE='\033[0;33m'
+NC='\033[0m' # No Color
+
+echo  "---------------------------------------------------------------------"
+printf "\n\
+\n\
+${GREEN}      _       _                _                _                 _ ${NC}\n\
+${GREEN}     | |     | |              | |              | |               | |${NC}\n\
+${GREEN}   __| | ___ | |_ ___ ___   __| | ___  ___  ___| |__   ___   ___ | |${NC}\n\
+${GREEN}  / _\` |/ _ \\| __/ __/ _ \\ / _\` |/ _ \\/ __|/ __| '_ \\ / _ \\ / _ \\| |${NC}\n\
+${GREEN} | (_| | (_) | || (_| (_) | (_| |  __/\\__ \\ (__| | | | (_) | (_) | |${NC}\n\
+${GREEN}  \\__,_|\\___/ \\__\\___\\___/ \\__,_|\\___||___/\\___|_| |_|\\___/ \\___/|_|${NC}\n\
+\n\
+\n\
+    Welcome to ${GREEN}Dot Code School${NC}! Your commit was received successfully.\n\
+\n\
+---------------------------------------------------------------------\n\
+\n"
+
+# Using pwd to get the current working directory
+REPO_PATH=$(pwd)
+
+# Extract <repo-name> from the path
+REPO_NAME=$(basename "$REPO_PATH" .git)
+
+# Construct the full URL
+SERVER_URL="https://git.dotcodeschool.com/$REPO_NAME.git"
+
+curl -fsSL -X POST -d 'Hello World!' https://dcs-git.requestcatcher.com/test -o /dev/null
