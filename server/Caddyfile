@@ -1,0 +1,24 @@
+https://git.dotcodeschool.com {
+ root * /srv/git/repos
+
+ @git {
+    path_regexp git ^/([^/]+)\.git/.*
+ }
+
+ handle @git {
+    reverse_proxy unix//var/run/fcgiwrap.socket {
+       transport fastcgi {
+        split .git
+        env SCRIPT_FILENAME /usr/lib/git-core/git-http-backend
+        env PATH_INFO {http.request.uri.path}
+        env GIT_PROJECT_ROOT /srv/git/repos
+        env GIT_HTTP_EXPORT_ALL ""
+        env REMOTE_USER {http.request.user}
+       }
+    }
+ }
+
+ handle {
+    respond 404
+ }
+}
