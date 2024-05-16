@@ -62,9 +62,9 @@ done
 REPO_PATH=$(pwd)
 
 # Extract <repo-name> from the path
-REPO_NAME=$(basename "$REPO_PATH" .git)
+REPO_NAME=$(basename "$REPO_PATH")
 
 # Construct the full URL
-SERVER_URL="https://git.dotcodeschool.com/$REPO_NAME.git"
+SERVER_URL="https://git.dotcodeschool.com/$REPO_NAME"
 
 curl -fsSL -X POST -d 'Hello World!' https://dcs-git.requestcatcher.com/test -o /dev/null
