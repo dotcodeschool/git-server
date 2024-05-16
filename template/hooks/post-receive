@@ -23,7 +23,7 @@
 # Note:
 # Ensure the base URL ("https://gitserver.com/") is correctly configured to match your server's URL structure.
 
-
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 ORANGE='\033[0;33m'
@@ -44,6 +44,19 @@ ${GREEN}  \\__,_|\\___/ \\__\\___\\___/ \\__,_|\\___||___/\\___|_| |_|\\___/ \\_
 \n\
 ---------------------------------------------------------------------\n\
 \n"
+
+while read oldrev newrev refname
+do
+    branch=$(echo $refname | sed 's|refs/heads/||')
+
+    if [ "$branch" != "master" ]; then
+        printf "\n\
+        ${RED}Trying to submit your solution? Push to the master branch instead.${NC}\n\
+        ${RED}Dot Code School accepts pushes to all branches but only run tests on master.${NC}\n\
+        "
+        exit 1
+    fi
+done
 
 # Using pwd to get the current working directory
 REPO_PATH=$(pwd)
