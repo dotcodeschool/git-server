@@ -1,6 +1,15 @@
 https://git.dotcodeschool.com {
  root * /srv/git/repos
 
+ handle /api/v0/create_repository {
+    reverse_proxy unix//var/run/fcgiwrap.socket {
+       transport fastcgi {
+        split /
+        env SCRIPT_FILENAME /srv/git/scripts/init_repo.sh
+       }
+    }
+ }
+
  @git {
     path_regexp git ^/([^/]+).*
  }
