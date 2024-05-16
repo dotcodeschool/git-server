@@ -2,13 +2,13 @@ https://git.dotcodeschool.com {
  root * /srv/git/repos
 
  @git {
-    path_regexp git ^/([^/]+)\.git/.*
+    path_regexp git ^/([^/]+).*
  }
 
  handle @git {
     reverse_proxy unix//var/run/fcgiwrap.socket {
        transport fastcgi {
-        split .git
+        split /
         env SCRIPT_FILENAME /usr/lib/git-core/git-http-backend
         env PATH_INFO {http.request.uri.path}
         env GIT_PROJECT_ROOT /srv/git/repos
