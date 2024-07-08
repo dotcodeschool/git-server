@@ -1,3 +1,7 @@
+{
+ email batman@dotcodeschool.com
+}
+
 https://git.dotcodeschool.com {
  root * /srv/git/repos
 
