@@ -5,6 +5,14 @@ set -e -o pipefail
 # Create new repository from template
 # Usage: init_repo.sh --id <REPO NAME> --template <TEMPLATE REPO>
 
+# Redirect stderr to the log file
+exec 2>>/srv/git/scripts/create_repo.log
+
+# Log the script execution
+echo "Running init_repo.sh script" >> /srv/git/scripts/create_repo.log
+env >> /srv/git/scripts/create_repo.log
+echo "Input:" >> /srv/git/scripts/create_repo.log
+
 # Load the secure token from AWS Secrets Manager
 SECURE_TOKEN=$(aws secretsmanager get-secret-value --secret-id secure-token --query SecretString --output text)
 
@@ -45,17 +53,30 @@ function create_repo {
     fi
 
     echo "Creating repository: $repo_name"
-    mkdir -pv "$repo_dir"
-    git init --bare --template="$default_template_dir" "$repo_dir" >/dev/null 2>&1 || { echo "Failed to create repository"; exit 1; }
-    git clone "$repo_dir" "$tmp_dir"
-    cp -r "$template_dir"/. "$tmp_dir"
-    cd "$tmp_dir"
-    git add .
-    git config user.name "dotcodeschool-bot" && git config user.email "hello@dotcodeschool.com"
-    git commit -m "init [skip ci]"
-    git push origin master
-    cd
+    {
+        mkdir -pv "$repo_dir"
+        git init --bare --template="$default_template_dir" "$repo_dir"
+        git clone "$repo_dir" "$tmp_dir"
+        cp -r "$template_dir"/. "$tmp_dir"
+        cd "$tmp_dir"
+        git add .
+        git config user.name "dotcodeschool-bot"
+        git config user.email "hello@dotcodeschool.com"
+        git commit -m "init [skip ci]"
+        git push origin master
+    } >> /srv/git/scripts/create_repo.log 2>&1 || {
+        echo "Status: 500 Internal Server Error"
+        echo "Content-Type: application/json"
+        echo ""
+        echo "{\"error\": \"Failed to create repository\"}"
+        exit 1
+    }
+    echo "Status: 201 Created"
+    echo "Content-Type: application/json"
+    echo ""
+    echo "{\"message\": \"Repository $repo_name created successfully\"}"
 }
+
 
 if [[ "$REQUEST_METHOD" != "POST" ]]; then
     echo "Status: 405 Method Not Allowed"
@@ -88,8 +109,3 @@ if [ -z "$REPO_NAME" ]; then
 fi
 
 create_repo "$REPO_NAME" "${TEMPLATE_REPO:-default}"
-
-echo "Status: 201 Created"
-echo "Content-Type: application/json"
-echo ""
-echo "{\"message\": \"Repository $repo_name created successfully\"}"
