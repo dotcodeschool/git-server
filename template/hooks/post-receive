@@ -29,15 +29,6 @@ BLUE='\033[0;34m'
 ORANGE='\033[0;33m'
 NC='\033[0m' # No Color
 
-TEST_RUNNER_URL='' # Add the URL of the test runner service
-
-if [ -z "$TEST_RUNNER_URL" ]; then
-    printf "\
-${RED}Error: The test runner URL is not set.${NC}\n\
-${RED}Please set the TEST_RUNNER_URL variable in the post-receive script.${NC}\n"
-    exit 1
-fi
-
 echo  "---------------------------------------------------------------------"
 printf "\n\
 \n\
@@ -52,7 +43,7 @@ ${GREEN}  \\__,_|\\___/ \\__\\___\\___/ \\__,_|\\___||___/\\___|_| |_|\\___/ \\_
     Welcome to ${GREEN}Dot Code School${NC}! Your commit was received successfully.\n\
 \n\
 ---------------------------------------------------------------------\n\
-\n"
+\n" >&1
 
 while read oldrev newrev refname
 do
@@ -62,7 +53,7 @@ do
         printf "\n\
         ${RED}Trying to submit your solution? Push to the master branch instead.${NC}\n\
         ${RED}Dot Code School accepts pushes to all branches but only run tests on master.${NC}\n\
-        "
+        " >&1
         exit 1
     fi
 done
@@ -76,4 +67,4 @@ REPO_NAME=$(basename "$REPO_PATH")
 # Construct the full URL
 SERVER_URL="https://git.dotcodeschool.com/$REPO_NAME"
 
-curl -fsSL -X POST -d '{ "repo_name": "$REPO_NAME" }' "$TEST_RUNNER_URL/schedule-test" -o /dev/null
+curl -fsSL -X PUT -H "Content-Type: application/json" -d '{ "test_ok": true }' "https://backend.dotcodeschool.com/api/v0/repository/$REPO_NAME" --max-time 30 -o /dev/null&
