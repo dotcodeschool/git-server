@@ -1,0 +1,57 @@
+{
+    admin off
+    email {$ADMIN_EMAIL}
+}
+
+{$GIT_DOMAIN} {
+    root * /srv/git/repos
+
+    # Git HTTP backend
+    handle /git/* {
+        root * /srv/git/repos
+        file_server
+    }
+
+    # Git CGI backend
+    handle /git-cgi/* {
+        root * /srv/git/scripts
+        fastcgi /var/run/fcgiwrap.socket
+    }
+
+    # API endpoints
+    handle /api/v0/* {
+        root * /srv/git/scripts
+        fastcgi /var/run/fcgiwrap.socket
+    }
+
+    # Webhook endpoint
+    handle /webhook {
+        root * /srv/git/scripts
+        fastcgi /var/run/fcgiwrap.socket
+    }
+
+    # Git operations
+    @git {
+        path_regexp git ^/([^/]+).*
+    }
+
+    handle @git {
+        reverse_proxy unix//var/run/fcgiwrap.socket {
+            transport fastcgi {
+                split /
+                env SCRIPT_FILENAME /usr/lib/git-core/git-http-backend
+                env PATH_INFO {http.request.uri.path}
+                env GIT_PROJECT_ROOT /srv/git/repos
+                env GIT_HTTP_EXPORT_ALL ""
+                env REMOTE_USER {http.request.user}
+                env GIT_SERVER_URL {$GIT_SERVER_URL}
+                env BACKEND_URL {$BACKEND_URL}
+            }
+        }
+    }
+
+    # Log all requests
+    log {
+        output file /var/log/caddy/access.log
+    }
+} 

@@ -11,6 +11,10 @@
 # 4. Extracts the username and repository name from the directory path.
 # 5. Constructs and displays the full URL of the repository based on extracted details.
 #
+# Required Environment Variables:
+# - GIT_SERVER_URL: The base URL of the git server (e.g., https://git.dotcodeschool.com)
+# - BACKEND_URL: The base URL of the backend server (e.g., https://backend.dotcodeschool.com)
+#
 # The script uses ANSI escape codes to colorize output:
 # - GREEN for success messages.
 # - BLUE, and ORANGE if needed for additional messages or alerts (currently not used in this script).
@@ -28,6 +32,17 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 ORANGE='\033[0;33m'
 NC='\033[0m' # No Color
+
+# Check for required environment variables
+if [ -z "$GIT_SERVER_URL" ]; then
+    echo "Error: GIT_SERVER_URL environment variable is not set"
+    exit 1
+fi
+
+if [ -z "$BACKEND_URL" ]; then
+    echo "Error: BACKEND_URL environment variable is not set"
+    exit 1
+fi
 
 echo  "---------------------------------------------------------------------"
 printf "\n\
@@ -65,6 +80,11 @@ REPO_PATH=$(pwd)
 REPO_NAME=$(basename "$REPO_PATH")
 
 # Construct the full URL
-SERVER_URL="https://git.dotcodeschool.com/$REPO_NAME"
+REPO_URL="${GIT_SERVER_URL}/${REPO_NAME}"
 
-curl -fsSL -X PUT -H "Content-Type: application/json" -d '{ "test_ok": true }' "https://backend.dotcodeschool.com/api/v0/repository/$REPO_NAME" --max-time 30 -o /dev/null&
+# Notify backend about the push
+curl -fsSL -X PUT \
+     -H "Content-Type: application/json" \
+     -d '{ "test_ok": true }' \
+     "${BACKEND_URL}/api/v0/repository/${REPO_NAME}" \
+     --max-time 30 -o /dev/null&
