@@ -1,5 +1,4 @@
 {
-    admin off
     email {$ADMIN_EMAIL}
     # Disable automatic HTTPS for local development
     auto_https off
