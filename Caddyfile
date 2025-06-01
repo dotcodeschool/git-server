@@ -1,10 +1,17 @@
 {
     admin off
     email {$ADMIN_EMAIL}
+    # Disable automatic HTTPS for local development
+    auto_https off
 }
 
 {$GIT_DOMAIN} {
     root * /srv/git/repos
+
+    # Health check endpoint
+    handle /health {
+        respond "{\"status\": \"ok\"}" 200
+    }
 
     # Git HTTP backend
     handle /git/* {
@@ -15,19 +22,31 @@
     # Git CGI backend
     handle /git-cgi/* {
         root * /srv/git/scripts
-        fastcgi /var/run/fcgiwrap.socket
+        reverse_proxy unix//var/run/fcgiwrap.socket {
+            transport fastcgi {
+                split /
+            }
+        }
     }
 
     # API endpoints
     handle /api/v0/* {
         root * /srv/git/scripts
-        fastcgi /var/run/fcgiwrap.socket
+        reverse_proxy unix//var/run/fcgiwrap.socket {
+            transport fastcgi {
+                split /
+            }
+        }
     }
 
     # Webhook endpoint
     handle /webhook {
         root * /srv/git/scripts
-        fastcgi /var/run/fcgiwrap.socket
+        reverse_proxy unix//var/run/fcgiwrap.socket {
+            transport fastcgi {
+                split /
+            }
+        }
     }
 
     # Git operations

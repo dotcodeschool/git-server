@@ -12,7 +12,7 @@ RUN mkdir -pv /srv/git/repos \
     /srv/git/templates
 
 # Copy scripts and Caddyfile
-COPY scripts/ /srv/git/scripts/
+COPY server/scripts/ /srv/git/scripts/
 COPY Caddyfile /etc/caddy/Caddyfile
 
 # Make scripts executable
