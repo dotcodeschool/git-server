@@ -34,6 +34,8 @@
         reverse_proxy unix//var/run/fcgiwrap.socket {
             transport fastcgi {
                 split /
+                env SCRIPT_FILENAME /srv/git/scripts/init_repo.sh
+                env HTTP_AUTHORIZATION {http.request.header.Authorization}
             }
         }
     }
