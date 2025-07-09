@@ -1,10 +1,12 @@
-FROM caddy:2
+FROM caddy:latest
 
 # Install required packages
 RUN apk add --no-cache \
     fcgiwrap \
     jq \
-    git
+    git \
+    git-daemon \
+    curl
 
 # Create necessary directories
 RUN mkdir -pv /srv/git/repos \
